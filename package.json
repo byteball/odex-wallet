@@ -1,0 +1,23 @@
+{
+	"name": "odex-wallet",
+	"version": "1.0.0",
+	"description": "A wallet for DEX",
+	"main": "run.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"DEX",
+		"ODEX",
+		"Obyte",
+		"autonomous agent"
+	],
+	"dependencies": {
+		"headless-obyte": "git+https://github.com/byteball/headless-obyte.git#aa",
+		"mongodb": "^3.5.2",
+		"ocore": "git+https://github.com/byteball/ocore.git#rocks-and-formulas",
+		"rpcify": "git+https://github.com/byteball/rpcify.git"
+	},
+	"author": "obyte",
+	"license": "MIT"
+}
