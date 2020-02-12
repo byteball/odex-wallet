@@ -13,7 +13,7 @@ async function start() {
 		}
 
 		const go = spawn('go run main.go', {
-			cwd: process.env.HOME + "/go/src/github.com/Proofsuite/amp-matching-engine",
+			cwd: process.env.HOME + "/go/src/github.com/byteball/odex-backend",
 			env: {
 				...process.env,
 				GO_ENV: conf.backendEnvironment,
