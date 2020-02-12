@@ -1,6 +1,6 @@
 const MongoClient = require('mongodb').MongoClient
 const argv = require('yargs').argv
-const conf = require('../../conf.js')
+const conf = require('ocore/conf.js')
 
 const collection = argv.collection
 

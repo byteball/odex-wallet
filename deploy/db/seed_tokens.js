@@ -1,5 +1,5 @@
 const MongoClient = require('mongodb').MongoClient
-const conf = require('../../conf.js')
+const conf = require('ocore/conf.js')
 const { getNetworkID } = require('../utils/helpers')
 
 const networkID = getNetworkID()

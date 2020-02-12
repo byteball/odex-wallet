@@ -1,5 +1,5 @@
 const MongoClient = require('mongodb').MongoClient
-const conf = require('../../conf.js')
+const conf = require('ocore/conf.js')
 
 (async () => {
 	client = await MongoClient.connect(conf.mongoUrl, { useNewUrlParser: true });

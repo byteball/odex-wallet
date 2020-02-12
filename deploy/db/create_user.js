@@ -1,7 +1,7 @@
 const argv = require('yargs').argv
 const user = argv.user
 const pwd = argv.password
-const conf = require('../../conf.js')
+const conf = require('ocore/conf.js')
 
 const MongoClient = require('mongodb').MongoClient
 let client, db
