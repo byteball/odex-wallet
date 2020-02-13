@@ -44,7 +44,7 @@ exports.arrQuoteAssets = process.env.testnet ? ['UccpQo12uLmufihkzdK7Kcrb5BlHp8G
 exports.rpcPort = 6333;
 exports.mongoUrl = 'mongodb://localhost:27017';
 exports.mongoDbName = 'odex';
-exports.backendEnvironment = process.env.testnet ? 'test' : 'prod';
+exports.backendEnvironment = process.env.testnet ? 'testnet' : 'livenet';
 
 exports.MIN_BALANCE_FOR_REFILL = 1e6;
 exports.MIN_BALANCE_FOR_NOTIFICATION = 1e6;
