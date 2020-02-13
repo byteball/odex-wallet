@@ -37,8 +37,8 @@ exports.explicitStart = true;
 exports.MAX_PRICE_PRECISION = 8; // number of significant digits
 exports.matcher_fee = 0.001;
 exports.affiliate_fee = 0.001;
-exports.aa_address = 'T2G5GDEMTKWJYPTHJ73KQAPUEUU4WJL7';
-exports.token_registry_aa_address = '5EGJ37MYQCV3WCTU4WRHKVF5N5IY7CEB';
+exports.aa_address = 'FVRZTCFXIDQ3EYRGQSLE5AMWUQF4PRYJ';
+exports.token_registry_aa_address = 'JKRVB732FRXEB5H2HZE22O4UDD64MML5';
 exports.arrQuoteAssets = process.env.testnet ? ['UccpQo12uLmufihkzdK7Kcrb5BlHp8GcMrSEA7NVdNw=', 'base'] : ['base'];
 
 exports.rpcPort = 6333;
