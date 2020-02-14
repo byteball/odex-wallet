@@ -2,7 +2,7 @@ const constants = require('ocore/constants.js');
 const balances = require('ocore/balances.js');
 const objectHash = require('ocore/object_hash.js');
 const headlessWallet = require('headless-obyte');
-const conf = require('./conf.js');
+const conf = require('ocore/conf.js');
 const notifications = require('./notifications.js');
 
 const operator = require('./operator.js');

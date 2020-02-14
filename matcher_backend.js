@@ -1,5 +1,5 @@
 const { spawn } = require('child_process');
-const conf = require('./conf.js');
+const conf = require('ocore/conf.js');
 
 async function start() {
 	return new Promise(resolve => {

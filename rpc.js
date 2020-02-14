@@ -1,7 +1,7 @@
 
 const rpcify = require('rpcify');
 const eventBus = require('ocore/event_bus.js');
-const conf = require('./conf.js');
+const conf = require('ocore/conf.js');
 
 const operator = require('./operator.js');
 const orders = require('./orders.js');

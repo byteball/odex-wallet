@@ -7,7 +7,7 @@ const db = require('ocore/db.js');
 const storage = require('ocore/storage.js');
 const network = require('ocore/network.js');
 const walletGeneral = require('ocore/wallet_general.js');
-const conf = require('./conf.js');
+const conf = require('ocore/conf.js');
 
 const operator = require('./operator.js');
 const utils = require('./utils.js');
