@@ -320,8 +320,12 @@ async function checkTrade(objAAResponse) {
 			console.log("another matcher's order " + hash + " not found");
 			continue;
 		}
-		if (order.status !== 'FILLED')
-			throw Error("executed order " + hash + " is not filled in the db");
+		if (order.status !== 'FILLED') {
+			if (['CANCELLED', 'AUTO_CANCELLED'].includes(order.status) && order.remainingSellAmount === 0)
+				console.log("executed order " + hash + " appears to be filled but has status " + order.status);
+			else
+				throw Error("executed order " + hash + " is " + order.status + " in the db, filled " + order.filledAmount + " of " + order.amount);
+		}
 	}
 
 	// check that amounts left are >= than in the db
