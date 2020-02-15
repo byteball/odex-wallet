@@ -14,6 +14,7 @@ const trades = require('./trades.js');
 const replication = require('./replication.js');
 
 let arrQueuedTrades = [];
+let bInitializedQueue = false;
 
 
 function executeTrade(matches, cb) {
@@ -33,6 +34,10 @@ function executeTrade(matches, cb) {
 
 function doExecuteTrade(matches, cb) {
 	console.error('executeTrade', JSON.stringify(matches, null, '\t'));
+	if (!bInitializedQueue)
+		return eventBus.once('initialized_trade_queue', () => {
+			doExecuteTrade(matches, cb);
+		});
 	let { err, bMyTrade, taker_order, maker_orders } = trades.parseTrade(matches);
 	if (err)
 		return cb(err);
@@ -230,6 +235,8 @@ async function initQueue() {
 
 		arrQueuedTrades.push(matches);
 	}
+	bInitializedQueue = true;
+	eventBus.emit('initialized_trade_queue');
 }
 
 function cleanFromMongo(obj) {
