@@ -227,7 +227,7 @@ async function onAAResponse(objAAResponse) {
 			}
 		}
 	}
-	if (conf.bLight) { // light clients don't receive updatedStateVars
+	else { // e.g. light clients don't receive updatedStateVars
 		let responseVars = objAAResponse.response.responseVars;
 		for (let var_name in responseVars) {
 			let address = var_name.split('_')[0];
