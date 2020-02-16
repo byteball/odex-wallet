@@ -1,0 +1,1 @@
+*/20 * * * * cd odex-wallet; node check_daemon.js 1>>~/.config/odex-wallet/check_daemon.log 2>>~/.config/odex-wallet/check_daemon.err
