@@ -413,6 +413,8 @@ async function updateTradeStatuses() {
 // look for trigger units sent to the AA
 async function onSavedUnit(objJoint) {
 	let objUnit = objJoint.unit;
+	if (!objUnit.messages) // final-bad
+		return;
 	let objBaseMessage = objUnit.messages.find(message => message.app === 'payment' && !message.payload.asset);
 	if (!objBaseMessage.payload.outputs.find(output => output.address === conf.aa_address && output.amount >= constants.MIN_BYTES_BOUNCE_FEE))
 		return;
