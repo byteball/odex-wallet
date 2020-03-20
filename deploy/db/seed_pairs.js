@@ -23,6 +23,7 @@ const seed = async () => {
 				{ quote: true },
 				{ symbol: 1, asset: 1, decimals: 1,  }
 			)
+			.sort({rank: -1})
 			.toArray()
 
 		
