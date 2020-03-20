@@ -63,7 +63,7 @@ const seed = async () => {
 			})
 		})
 
-		const response = await db.collection('pairs').insertMany(pairs)
+		const response = await db.collection('pairs').insertMany(pairs, {ordered: false})
 	} catch (e) {
 		console.log(e.message)
 	} finally {
