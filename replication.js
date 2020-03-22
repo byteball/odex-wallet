@@ -22,9 +22,6 @@ let last_id;
 let since;
 let assocLastEventHashes = {};
 
-function lock(key) {
-	return new Promise(resolve => mutex.lock([key], resolve));
-}
 
 function createAndBroadcastEvent(type, payload) {
 	let event = {
@@ -164,7 +161,7 @@ async function requestEvent(ws, event_hash) {
 async function handleEventUnderLock(ws, objSignedEvent) {
 	if (!objSignedEvent || !objSignedEvent.signed_message || !objSignedEvent.signed_message.event_hash)
 		return "no event_hash";
-	const unlock = await lock(objSignedEvent.signed_message.event_hash); // returns unlock callback
+	const unlock = await mutex.lock(objSignedEvent.signed_message.event_hash); // returns unlock callback
 	const err = await handleEvent(ws, objSignedEvent);
 	unlock();
 	return err;
