@@ -93,7 +93,7 @@ async function handleInitialOrders(arrOrders) {
 			let err = await orders.handleSignedOrder(order.originalOrder, address);
 			if (err)
 				return console.log("bad order: " + err);
-			let be_order = orders.getBackendOrder(order.originalOrder);
+			let be_order = await orders.getBackendOrder(order.originalOrder);
 			if (!orders.ordersAreEqual(be_order, order))
 				return console.log("received and derived order are not the same:\nreceived " + JSON.stringify(order, null, '\t') + "\nderived\n" + JSON.stringify(be_order, null, '\t'));
 			order.createdAt = new Date(order.createdAt);

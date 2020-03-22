@@ -8,7 +8,19 @@ const signing = require('./signing.js');
 const dagState = require('./dag_state.js');
 const utils = require('./utils.js');
 const operator = require('./operator.js');
+const mongo = require('./mongo.js');
 
+let arrQuoteAssets;
+
+async function getQuoteAssets() {
+	if (arrQuoteAssets)
+		return arrQuoteAssets;
+	let mongodb = await mongo.getMongo();
+	let tokens = await mongodb.collection('tokens').find({ quote: true }, { asset: 1 }).sort({ rank: -1 }).toArray();
+	arrQuoteAssets = tokens.map(token => token.asset);
+	console.log('quote assets:', arrQuoteAssets);
+	return arrQuoteAssets;
+}
 
 function getOrderError(order_data, origin_address) {
 	if (order_data.matcher !== origin_address && order_data.affiliate !== origin_address)
@@ -101,9 +113,9 @@ function getPriceInAllowedPrecision(order_data) {
 		return 1 / dropExcessivePrecision(1 / order_data.price);
 }
 
-function getBackendOrder(order) {
+async function getBackendOrder(order) {
 	const order_data = order.signed_message;
-	const [base_asset, quote_asset] = getPair(order_data.sell_asset, order_data.buy_asset);
+	const [base_asset, quote_asset] = await getPair(order_data.sell_asset, order_data.buy_asset);
 	const side = (order_data.sell_asset === base_asset) ? 'SELL' : 'BUY';
 	let buy_amount = Math.round(order_data.price * order_data.sell_amount);
 	let price = (side === 'SELL') ? order_data.price : 1 / order_data.price;
@@ -126,11 +138,12 @@ function getBackendOrder(order) {
 }
 
 // returns [base, quote] pair
-function getPair(asset1, asset2) {
+async function getPair(asset1, asset2) {
 	if (asset2 === asset1)
 		throw Error("same token " + asset1);
-	let index1 = conf.arrQuoteAssets.indexOf(asset1);
-	let index2 = conf.arrQuoteAssets.indexOf(asset2);
+	let arrQuoteAssets = await getQuoteAssets();
+	let index1 = arrQuoteAssets.indexOf(asset1);
+	let index2 = arrQuoteAssets.indexOf(asset2);
 	if (index1 < 0 && index2 < 0)
 		throw Error("none of the tokens is quote token: " + asset1 + ", " + asset2);
 	if (index2 < 0)
@@ -167,7 +180,7 @@ function handleSignedOrder(objSignedMessage, origin_address, handleResult) {
 		// if the definition changed and the signature is not network-aware, it has to use the old definition, otherwise its hash won't match the address
 	//	if (!ValidationUtils.isValidBase64(objSignedMessage.last_ball_unit, constants.HASH_LENGTH))
 	//		return handleResult('invalid last_ball_unit');
-		let backendOrder = getBackendOrder(objSignedMessage);
+		let backendOrder = await getBackendOrder(objSignedMessage);
 		eventBus.emit('new_order', backendOrder);
 		console.error('----- new_order', objSignedMessage);
 		handleResult(null, backendOrder.hash);

@@ -39,7 +39,6 @@ exports.matcher_fee = 0.001;
 exports.affiliate_fee = 0.001;
 exports.aa_address = 'FVRZTCFXIDQ3EYRGQSLE5AMWUQF4PRYJ';
 exports.token_registry_aa_address = 'JKRVB732FRXEB5H2HZE22O4UDD64MML5';
-exports.arrQuoteAssets = process.env.testnet ? ['UccpQo12uLmufihkzdK7Kcrb5BlHp8GcMrSEA7NVdNw=', 'base'] : ['base'];
 
 exports.rpcPort = process.env.testnet ? 16333 : 6333;
 exports.mongoUrl = 'mongodb://localhost:27017';
