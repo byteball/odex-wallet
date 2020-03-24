@@ -25,7 +25,7 @@ function handleSignedCancel(objSignedMessage, assocAddressByOrderHash, handleRes
 		if (assocAddressByOrderHash && address !== assocAddressByOrderHash[hash])
 			return handleResult(`You signed with a wrong address, please make sure you are in the wallet ${assocAddressByOrderHash[hash]}.`);
 		eventBus.emit('cancel_order', { orderHash: hash, userAddress: address });
-		console.error('cancel', hash, address);
+		console.error('---- cancel', hash, address);
 		handleResult();
 	});
 }

@@ -22,6 +22,7 @@ function getFees(dummy, cb) {
 }
 
 function addOrder(objSignedMessage, cb){
+	console.error('--- addOrder received', objSignedMessage);
 	orders.handleSignedOrder(objSignedMessage, operator.getAddress(), (err, hash) => {
 		if (err)
 			return cb(err);
@@ -31,6 +32,7 @@ function addOrder(objSignedMessage, cb){
 }
 
 function cancelOrder(objSignedMessage, cb){
+	console.error('--- cancelOrder received', objSignedMessage);
 	cancels.handleSignedCancel(objSignedMessage, null, err => {
 		if (err)
 			return cb(err);
