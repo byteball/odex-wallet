@@ -89,8 +89,7 @@ async function handleInitialOrders(arrOrders) {
 			let existing_order = await mongodb.collection('orders').findOne({ hash: order.hash });
 			if (existing_order)
 				continue;
-			let address = order.originalOrder.authors[0].address;
-			let err = await orders.handleSignedOrder(order.originalOrder, address);
+			let err = await orders.handleSignedOrder(order.originalOrder, order.matcherAddress);
 			if (err)
 				return console.log("bad order: " + err);
 			let be_order = await orders.getBackendOrder(order.originalOrder);
@@ -279,7 +278,7 @@ async function executeReplicatedTrade(matches, origin_address) {
 	let baseToken = taker_be_order.baseToken;
 	let quoteToken = taker_be_order.quoteToken;
 	let taker_order_data = taker_be_order.originalOrder.signed_message;
-	let [taker_order, err2] = await readOrAddOrder(taker_be_order);
+	let [taker_order, err2] = await readOrAddOrder(taker_be_order, origin_address);
 	if (err2)
 		return err2;
 	if (taker_order.hash !== taker_be_order.hash)
@@ -302,7 +301,7 @@ async function executeReplicatedTrade(matches, origin_address) {
 		let round_trip_amount = Math.round(order_data.price * taker_order_data.price * order_data.sell_amount);
 		if (round_trip_amount > order_data.sell_amount)
 			return "price mismatch " + round_trip_amount + " > " + order_data.sell_amount;
-		let [maker_order, err] = await readOrAddOrder(be_order);
+		let [maker_order, err] = await readOrAddOrder(be_order, origin_address);
 		if (err)
 			return err;
 		if (maker_order.hash !== be_order.hash)
