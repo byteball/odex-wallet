@@ -21,6 +21,10 @@ async function start() {
 			shell: true,
 		});
 
+		go.on('error', (err) => {
+			console.log(`Failed to start 'go run ${process.env.HOME}/go/src/github.com/byteball/odex-backend/main.go'. Did you install odex-backend?`);
+		});
+
 		go.stdout.on('data', (data) => {
 			console.error(`++ go stdout: ${data}`);
 			onStarted();
