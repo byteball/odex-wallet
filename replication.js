@@ -98,7 +98,7 @@ async function handleInitialOrders(arrOrders) {
 			order.createdAt = new Date(order.createdAt);
 			order.updatedAt = new Date(order.updatedAt);
 				// this will update partially filled orders
-			await mongodb.collection('orders').updateOne({ hash: be_order.hash }, order, { upsert: true });
+			await mongodb.collection('orders').updateOne({ hash: be_order.hash }, { $set: order }, { upsert: true });
 		}
 	}
 	catch (e) {
