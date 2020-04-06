@@ -158,7 +158,7 @@ async function requestEvent(ws, event_hash) {
 }
 
 async function handleEventUnderLock(ws, objSignedEvent) {
-	if (!objSignedEvent || !objSignedEvent.signed_message || !objSignedEvent.signed_message.event_hash)
+	if (!objSignedEvent || !objSignedEvent.signed_message || !objSignedEvent.signed_message.event_hash || typeof objSignedEvent.signed_message.event_hash != "string")
 		return "no event_hash";
 	const unlock = await mutex.lock(objSignedEvent.signed_message.event_hash); // returns unlock callback
 	const err = await handleEvent(ws, objSignedEvent);
@@ -337,6 +337,8 @@ async function executeReplicatedTrade(matches, origin_address) {
 		const rows = await db.query("SELECT bounced FROM aa_responses WHERE trigger_unit=?", [unit]);
 		if (rows.length && !rows[0].bounced) // if not known yet, we'll later first learn about the trigger, then update its status online
 			trade.status = "COMMITTED";
+		trade.createdAt = new Date(trade.createdAt);
+		trade.updatedAt = new Date(trade.updatedAt);
 	}
 
 	// update the affected orders:
