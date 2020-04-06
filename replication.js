@@ -158,7 +158,7 @@ async function requestEvent(ws, event_hash) {
 }
 
 async function handleEventUnderLock(ws, objSignedEvent) {
-	if (!objSignedEvent || !objSignedEvent.signed_message || !objSignedEvent.signed_message.event_hash)
+	if (!objSignedEvent || !objSignedEvent.signed_message || !objSignedEvent.signed_message.event_hash || typeof objSignedEvent.signed_message.event_hash != "string")
 		return "no event_hash";
 	const unlock = await mutex.lock(objSignedEvent.signed_message.event_hash); // returns unlock callback
 	const err = await handleEvent(ws, objSignedEvent);
