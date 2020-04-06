@@ -337,6 +337,8 @@ async function executeReplicatedTrade(matches, origin_address) {
 		const rows = await db.query("SELECT bounced FROM aa_responses WHERE trigger_unit=?", [unit]);
 		if (rows.length && !rows[0].bounced) // if not known yet, we'll later first learn about the trigger, then update its status online
 			trade.status = "COMMITTED";
+		trade.createdAt = new Date(trade.createdAt);
+		trade.updatedAt = new Date(trade.updatedAt);
 	}
 
 	// update the affected orders:
