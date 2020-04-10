@@ -38,7 +38,7 @@ exports.MAX_PRICE_PRECISION = 8; // number of significant digits
 exports.matcher_fee = 0.001;
 exports.affiliate_fee = 0.001;
 exports.aa_address = 'FVRZTCFXIDQ3EYRGQSLE5AMWUQF4PRYJ';
-exports.token_registry_aa_address = 'JKRVB732FRXEB5H2HZE22O4UDD64MML5';
+exports.token_registry_aa_address = 'ZT2B6UYBAEHDU5M3EM2MSMVA5OC2AHAY';
 
 exports.rpcPort = process.env.testnet ? 16333 : 6333;
 exports.mongoUrl = 'mongodb://localhost:27017';
