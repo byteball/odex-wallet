@@ -18,6 +18,7 @@ const mongo = require('./mongo.js');
 let assocPendingWithdrawals = {};
 
 let assocSymbolByAsset = {};
+let assocAssetBySymbol = {};
 let assocDecimalsByAsset = {};
 
 function readAAStateVar(aa_address, var_name, cb) {
@@ -128,6 +129,7 @@ function subtractPendingWithdrawals(address, {balances_by_symbol, balances_by_as
 
 function resetAssetInfos() {
 	assocSymbolByAsset = {};
+	assocAssetBySymbol = {};
 	assocDecimalsByAsset = {};
 }
 
@@ -142,6 +144,18 @@ async function getSymbolByAsset(asset) {
 		symbol = asset.replace(/[\/+=]/, '').substr(0, 6);
 	assocSymbolByAsset[asset] = symbol;
 	return symbol;
+}
+
+async function getAssetBySymbol(symbol) {
+	if (symbol === 'GBYTE')
+		return 'base';
+	if (assocAssetBySymbol[symbol])
+		return assocAssetBySymbol[symbol];
+	let asset = await readAAStateVar(conf.token_registry_aa_address, 's2a_' + symbol);
+	console.error('----- getSymbolByAsset', symbol, asset);
+	if (asset)
+		assocAssetBySymbol[symbol] = asset;
+	return asset;
 }
 
 async function getDecimalsByAsset(asset) {
@@ -180,6 +194,12 @@ function getSymbol(asset, cb) {
 	checkAssetExists(asset, async (bExists) => {
 		bExists ? cb(null, await getSymbolByAsset(asset)) : cb("asset not found");
 	});
+}
+
+async function getAsset(symbol, cb) {
+	console.error('--- getAsset received', symbol);
+	let asset = await getAssetBySymbol(symbol);
+	asset ? cb(null, asset) : cb("symbol not found");
 }
 
 function getDecimals(asset, cb) {
@@ -482,6 +502,7 @@ function startWatching() {
 exports.getBalance = getBalance;
 exports.getBalances = getBalances;
 exports.getSymbol = getSymbol;
+exports.getAsset = getAsset;
 exports.getDecimals = getDecimals;
 exports.getAuthorizedAddresses = getAuthorizedAddresses;
 exports.isAuthorized = isAuthorized;

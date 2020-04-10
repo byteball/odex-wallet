@@ -58,6 +58,7 @@ function start() {
 	rpcify.expose(getOperatorAddress, true);
 	rpcify.expose(getFees, true);
 	rpcify.expose(dagState.getSymbol);
+	rpcify.expose(dagState.getAsset);
 	rpcify.expose(dagState.getDecimals);
 	rpcify.expose(getAuthorizedAddresses, true);
 //	rpcify.expose(verifySignature);
