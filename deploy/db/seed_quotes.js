@@ -18,13 +18,13 @@ const seed = async () => {
 		client = await MongoClient.connect(conf.mongoUrl, { useNewUrlParser: true });
 		db = client.db(conf.mongoDbName)
 
-		documents = quoteTokens.map((symbol) => ({
+		documents = quoteTokens[networkID].map((symbol) => ({
 			symbol: symbol,
 			asset: assets[symbol],
-			decimals: decimals[symbol],
+			decimals: decimals[networkID][symbol],
 			quote: true,
 			listed: true,
-			rank: tokenRanks[symbol] ? tokenRanks[symbol] : 0,
+			rank: tokenRanks[networkID][symbol] || 0,
 			createdAt: Date(),
 			updatedAt: Date()
 		}))
