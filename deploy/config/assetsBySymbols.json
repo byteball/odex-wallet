@@ -1,8 +1,8 @@
 {
 	"livenet":{
 		"GBYTE":"base",
-		"USD_20200701":"bfAEwUTg4D86OtV8xHOqNF4Kk5htNcz1qARGt8Lurqg=",
-		"BTC_20200701":"3p8VUxVDQvnvT7fcryrJP4B55IsNrtvvbWjWJGd40do="
+		"USD_20200701":"6OmWYOTyfwhoNRHi3FznjOmdzDbqIW24h9x4H9fSFL4=",
+		"BTC_20200701":"ZVuuh5oWAJnISvtOFdzHAa7QTl/CG7T2KDfAGB4qSxk="
 	},
 	"testnet":{
 		"USDC":"UccpQo12uLmufihkzdK7Kcrb5BlHp8GcMrSEA7NVdNw=",
