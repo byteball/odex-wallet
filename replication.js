@@ -41,7 +41,13 @@ function createAndBroadcastEvent(type, payload) {
 		last_id++;
 		console.log('last_id', last_id);
 		objSignedEvent._id = last_id;
-		await mongodb.collection('events').insertOne(objSignedEvent);
+		try {
+			await mongodb.collection('events').insertOne(objSignedEvent, { checkKeys: false });
+		}
+		catch (e) {
+			console.error("error while inserting a new event: ", e);
+			throw e;
+		}
 		delete objSignedEvent._id;
 		assocLastEventHashes[event.origin] = event.event_hash;
 		broadcastMessage({ signed_event: objSignedEvent });
@@ -98,7 +104,7 @@ async function handleInitialOrders(arrOrders) {
 			order.createdAt = new Date(order.createdAt);
 			order.updatedAt = new Date(order.updatedAt);
 				// this will update partially filled orders
-			await mongodb.collection('orders').updateOne({ hash: be_order.hash }, { $set: order }, { upsert: true });
+			await mongodb.collection('orders').updateOne({ hash: be_order.hash }, { $set: order }, { upsert: true, checkKeys: false });
 		}
 	}
 	catch (e) {
@@ -216,7 +222,7 @@ async function handleEvent(ws, objSignedEvent) {
 		if (!prev_event && event.ts >= since) {
 			console.log("prev event unknown, will request " + event.prev_event_hash);
 			try {
-				await mongodb.collection('unhandled_events').insertOne(objSignedEvent);
+				await mongodb.collection('unhandled_events').insertOne(objSignedEvent, {checkKeys: false});
 			}
 			catch (e) { // ignore duplicate
 				console.log("error from inserting unhandled: " + e);
@@ -249,7 +255,7 @@ async function handleEvent(ws, objSignedEvent) {
 
 	last_id++;
 	objSignedEvent._id = last_id;
-	await mongodb.collection('events').insertOne(objSignedEvent);
+	await mongodb.collection('events').insertOne(objSignedEvent, {checkKeys: false});
 	delete objSignedEvent._id;
 	assocLastEventHashes[event.origin] = event.event_hash;
 
