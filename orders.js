@@ -118,7 +118,7 @@ async function getBackendOrder(order) {
 	const [base_asset, quote_asset] = await getPair(order_data.sell_asset, order_data.buy_asset);
 	const side = (order_data.sell_asset === base_asset) ? 'SELL' : 'BUY';
 	let buy_amount = Math.round(order_data.price * order_data.sell_amount);
-	let price = (side === 'SELL') ? order_data.price : 1 / order_data.price;
+	let price = dropExcessivePrecision((side === 'SELL') ? order_data.price : 1 / order_data.price);
 	let amount = (side === 'SELL') ? order_data.sell_amount : buy_amount;
 
 //	let strPrice = price.toPrecision(8); // drop the excessive precision
