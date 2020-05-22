@@ -1,0 +1,375 @@
+{
+	doc_url: "https://odex.ooo/odex.json",
+	messages: {
+		cases: [
+			{ // withdraw funds
+				if: `{ trigger.data.withdraw AND trigger.data.asset AND trigger.data.amount AND trigger.output[[asset=base]] >= 10000 }`,
+				init: `{
+					if (trigger.data.to){
+						if (!is_valid_address(trigger.data.to))
+							bounce("invalid withdrawal address: " || trigger.data.to);
+						$address = trigger.data.to;
+						// authorized address can initiate withdrawals in favor of the owner
+						$owner_address = var['grant_' || $address || '_to_' || trigger.address] ? $address : trigger.address;
+					}
+					else {
+						$address = trigger.address;
+						$owner_address = trigger.address;
+					}
+					$key = 'balance_' || $owner_address || '_' || trigger.data.asset;
+					$balance = var[$key] + 0;
+					if (trigger.data.amount == 'all')
+						$amount = $balance;
+					else if (trigger.data.amount > $balance)
+						bounce("withdrawal amount too large, balance: " || $balance);
+					else
+						$amount = trigger.data.amount;
+				}`,
+				messages: [
+					{
+						app: 'payment',
+						payload: {
+							asset: "{trigger.data.asset}",
+							outputs: [
+								{address: "{$address}", amount: "{$amount}"}
+							]
+						}
+					},
+					{
+						app: 'state',
+						state: `{
+							var[$key] -= $amount;
+							response[$owner_address || '_' || trigger.data.asset] = -$amount;
+							response['event'] = 'withdrawal';
+						}`
+					}
+				]
+			},
+			{ // execute orders, the larger order is partially filled. Order1 is maker (it came into the order books first), order2 is taker. If the prices overlap, the trade happens at maker's (order1) price
+				if: `{
+					$order1 = trigger.data.order1.signed_message;
+					$order2 = trigger.data.order2.signed_message;
+					if (!$order1.sell_asset OR !$order2.sell_asset)
+						return false;
+					if ($order1.sell_asset != $order2.buy_asset OR $order1.buy_asset != $order2.sell_asset)
+						bounce('assets do not match');
+					if ($order1.sell_asset == $order1.buy_asset)
+						bounce('same asset');
+
+					if ($order1.matcher != trigger.address)
+						bounce('wrong matcher in order1');
+					if ($order2.matcher != trigger.address)
+						bounce('wrong matcher in order2');
+					
+					if ($order1.aa != this_address)
+						bounce('wrong aa in order1');
+					if ($order2.aa != this_address)
+						bounce('wrong aa in order2');
+
+					if ($order1.expiry_ts AND $order1.expiry_ts <= timestamp)
+						bounce("order1 expired");
+					if ($order2.expiry_ts AND $order2.expiry_ts <= timestamp)
+						bounce("order2 expired");
+
+					$sell_key1 = 'balance_' || $order1.address || '_' || $order1.sell_asset;
+					$sell_key2 = 'balance_' || $order2.address || '_' || $order2.sell_asset;
+
+					$id1 = sha256($order1.address || $order1.sell_asset || $order1.buy_asset || $order1.sell_amount || $order1.price || ($order1.nonce otherwise '') || (trigger.data.order1.last_ball_unit otherwise '-'));
+					$id2 = sha256($order2.address || $order2.sell_asset || $order2.buy_asset || $order2.sell_amount || $order2.price || ($order2.nonce otherwise '') || (trigger.data.order2.last_ball_unit otherwise '-'));
+
+					if (var['executed_' || $id1])
+						bounce('order1 already executed');
+					if (var['executed_' || $id2])
+						bounce('order2 already executed');
+
+					if (var['cancelled_' || $id1])
+						bounce('order1 already cancelled');
+					if (var['cancelled_' || $id2])
+						bounce('order2 already cancelled');
+
+					$amount_left1 = var['amount_left_' || $id1] otherwise $order1.sell_amount;
+					$amount_left2 = var['amount_left_' || $id2] otherwise $order2.sell_amount;
+
+					// check balances
+					if ($amount_left1 > var[$sell_key1] + 0)
+						bounce('not sufficient balance in sell asset to complete order1');
+					if ($amount_left2 > var[$sell_key2] + 0)
+						bounce('not sufficient balance in sell asset to complete order2');
+
+					// check if prices match
+					$maker_price = $order1.price;
+					$buy_amount1 = round($amount_left1 * $order1.price);
+					if ($buy_amount1 > $amount_left2){ // order2 is the smaller one
+						$order_smaller = $order2;
+						$order_larger = $order1;
+						$id_smaller = $id2;
+						$id_larger = $id1;
+						$amount_left_smaller = $amount_left2;
+						$amount_left_larger = $amount_left1;
+						$buy_amount2 = round($amount_left2 / $maker_price); // using maker price instead of our $order2.price
+						$buy_amount_smaller = $buy_amount2;
+						$amount_sold2 = $amount_left2;
+						$amount_sold1 = $buy_amount2;
+					}
+					else{ // order1 is the smaller one
+						$order_smaller = $order1;
+						$order_larger = $order2;
+						$id_smaller = $id1;
+						$id_larger = $id2;
+						$amount_left_smaller = $amount_left1;
+						$amount_left_larger = $amount_left2;
+						$buy_amount_smaller = $buy_amount1;
+						$amount_sold1 = $amount_left1;
+						$amount_sold2 = $buy_amount1;
+					}
+					// if $order1.price * $order2.price > 1 then you can make a profit by going through two opposite trades or being on both sides of a single trade. This is only possible for market-maker orders, which are not matched.
+					// order of multiplication is important as it can affect rounding errors
+					if (round($amount_left_smaller * ($order1.price * $order2.price)) > $amount_left_smaller)
+						bounce("price mismatch");
+					$expected_buy_amount_larger = round(($buy_amount_smaller-1) * $order_larger.price); // -1 to account for rounding errors
+					if ($expected_buy_amount_larger > $amount_left_smaller)
+						bounce("price mismatch: larger user " || $id_larger || " doesn't like the price, he gets less than expects: " || $amount_left_smaller || " < " || $expected_buy_amount_larger || ", amounts left: " || $amount_left1 || ", " || $amount_left2);
+
+					// matcher fees
+					$max_matcher_fee1 = round($order1.matcher_fee * $amount_sold1/$order1.sell_amount);
+					$max_matcher_fee2 = round($order2.matcher_fee * $amount_sold2/$order2.sell_amount);
+					$matcher_fee1 = (!exists(trigger.data.matcher_fee1) OR trigger.data.matcher_fee1 == 'default') ? $max_matcher_fee1 : trigger.data.matcher_fee1;
+					$matcher_fee2 = (!exists(trigger.data.matcher_fee2) OR trigger.data.matcher_fee2 == 'default') ? $max_matcher_fee2 : trigger.data.matcher_fee2;
+					// the formula will fail if matcher_fee1/matcher_fee2 is not a number
+					if ($matcher_fee1 > $max_matcher_fee1)
+						bounce('matcher_fee1 is too large');
+					if ($matcher_fee2 > $max_matcher_fee2)
+						bounce('matcher_fee2 is too large');
+					
+					// affiliates
+					if ($order1.affiliate){
+						if (!$order1.affiliate_fee_asset)
+							bounce('no affiliate_fee_asset in order1');
+						if ($order1.affiliate_fee < 0) // will error if none or not a number
+							bounce('affiliate_fee < 0 in order1');
+						$affiliate_fee1 = round($order1.affiliate_fee * $amount_sold1/$order1.sell_amount);
+					}
+					if ($order2.affiliate){
+						if (!$order2.affiliate_fee_asset)
+							bounce('no affiliate_fee_asset in order2');
+						if ($order2.affiliate_fee < 0) // will error if none or not a number
+							bounce('affiliate_fee < 0 in order2');
+						$affiliate_fee2 = round($order2.affiliate_fee * $amount_sold2/$order2.sell_amount);
+					}
+
+					$signer1 = trigger.data.order1.authors[0].address;
+					$signer2 = trigger.data.order2.authors[0].address;
+					if ($signer1 != $order1.address AND !var['grant_' || $order1.address || '_to_' || $signer1])
+						bounce("order1 signer was not authorized to sign");
+					if ($signer2 != $order2.address AND !var['grant_' || $order2.address || '_to_' || $signer2])
+						bounce("order2 signer was not authorized to sign");
+					if (!is_valid_signed_package(trigger.data.order1, $signer1))
+						bounce('bad signature of order1');
+					if (!is_valid_signed_package(trigger.data.order2, $signer2))
+						bounce('bad signature of order2');
+
+					true
+				}`,
+				messages: [{
+					app: 'state',
+					state: `{
+						$buy_key1 = 'balance_' || $order1.address || '_' || $order1.buy_asset;
+						$buy_key2 = 'balance_' || $order2.address || '_' || $order2.buy_asset;
+						var[$sell_key1] -= $amount_sold1;
+						var[$sell_key2] -= $amount_sold2;
+						var[$buy_key1] += $amount_sold2;
+						var[$buy_key2] += $amount_sold1;
+
+						// matcher fees
+						$matcher_fee_user_key1 = 'balance_' || $order1.address || '_' || $order1.matcher_fee_asset;
+						$matcher_fee_user_key2 = 'balance_' || $order2.address || '_' || $order2.matcher_fee_asset;
+						$matcher_fee_matcher_key1 = 'balance_' || $order1.matcher || '_' || $order1.matcher_fee_asset;
+						$matcher_fee_matcher_key2 = 'balance_' || $order2.matcher || '_' || $order2.matcher_fee_asset;
+						var[$matcher_fee_matcher_key1] += $matcher_fee1;
+						var[$matcher_fee_matcher_key2] += $matcher_fee2;
+						var[$matcher_fee_user_key1] -= $matcher_fee1;
+						var[$matcher_fee_user_key2] -= $matcher_fee2;
+						if (var[$matcher_fee_user_key1] < 0)
+							bounce("not enough user1 balance for matcher fees");
+						if (var[$matcher_fee_user_key2] < 0)
+							bounce("not enough user2 balance for matcher fees");
+						// fees can be negative
+						if (var[$matcher_fee_matcher_key1] < 0)
+							bounce("not enough matcher order1.matcher_fee_asset balance for matcher fees");
+						if (var[$matcher_fee_matcher_key2] < 0)
+							bounce("not enough matcher order2.matcher_fee_asset balance for matcher fees");
+
+						// affiliate fees
+						if ($order1.affiliate AND $affiliate_fee1){
+							$affiliate_fee_user_key1 = 'balance_' || $order1.address || '_' || $order1.affiliate_fee_asset;
+							$affiliate_fee_affiliate_key1 = 'balance_' || $order1.affiliate || '_' || $order1.affiliate_fee_asset;
+							var[$affiliate_fee_user_key1] -= $affiliate_fee1;
+							var[$affiliate_fee_affiliate_key1] += $affiliate_fee1;
+							if (var[$affiliate_fee_user_key1] < 0)
+								bounce("not enough user1 balance for affiliate fees");
+						}
+						if ($order2.affiliate AND $affiliate_fee2){
+							$affiliate_fee_user_key2 = 'balance_' || $order2.address || '_' || $order2.affiliate_fee_asset;
+							$affiliate_fee_affiliate_key2 = 'balance_' || $order2.affiliate || '_' || $order2.affiliate_fee_asset;
+							var[$affiliate_fee_user_key2] -= $affiliate_fee2;
+							var[$affiliate_fee_affiliate_key2] += $affiliate_fee2;
+							if (var[$affiliate_fee_user_key2] < 0)
+								bounce("not enough user2 balance for affiliate fees");
+						}
+
+						// AA fees
+						$aa_fee = 1000;
+						$base_key1 = 'balance_' || $order1.address || '_base';
+						$base_key2 = 'balance_' || $order2.address || '_base';
+						var[$base_key1] -= $aa_fee;
+						var[$base_key2] -= $aa_fee;
+						if (var[$base_key1] < 0 OR var[$base_key2] < 0)
+							bounce('not enough balance for AA fees');
+						
+						// refund the matcher for bounce fees
+						var['balance_' || trigger.address || '_base'] += trigger.output[[asset=base]];
+
+						// update order states
+						var['executed_' || $id_smaller] = 1;
+						var['amount_left_' || $id_smaller] = false;
+						response['executed_' || $id_smaller] = 1;
+						$new_amount_left_larger = $amount_left_larger - $buy_amount_smaller;
+						if ($new_amount_left_larger < 0)
+							bounce("panic: new_amount_left_larger < 0");
+						if ($new_amount_left_larger){
+							var['amount_left_' || $id_larger] = $new_amount_left_larger;
+							response['amount_left_' || $id_larger] = $new_amount_left_larger;
+						}
+						else{
+							var['executed_' || $id_larger] = 1;
+							var['amount_left_' || $id_larger] = false;
+							response['executed_' || $id_larger] = 1;
+						}
+
+						// parsable response for transaction log
+						if ($order1.address != $order2.address){
+							response[$order1.address || '_' || $order1.sell_asset] = -$amount_sold1;
+							response[$order2.address || '_' || $order2.buy_asset] = $amount_sold1;
+							response[$order1.address || '_' || $order1.buy_asset] = $amount_sold2;
+							response[$order2.address || '_' || $order2.sell_asset] = -$amount_sold2;
+						}
+						else{ // self-match
+							response[$order1.address || '_' || $order1.sell_asset] = 0;
+							response[$order1.address || '_' || $order1.buy_asset] = 0;
+						}
+						response['amount_' || $order1.sell_asset] = $amount_sold1;
+						response['amount_' || $order1.buy_asset] = $amount_sold2;
+						response['event'] = 'trade';
+					}`
+				}]
+			},
+			{ // onchain cancel
+				if: "{trigger.data.cancel AND trigger.data.order}",
+				init: `{
+					$order = trigger.data.order.signed_message;
+					if (!$order.sell_asset OR !$order.buy_asset OR !$order.sell_amount OR !$order.price OR !$order.address OR !$order.matcher)
+						bounce("missing data in order");
+
+					if ($order.address != trigger.address AND !var['grant_' || $order.address || '_to_' || trigger.address])
+						bounce('not your order');
+					
+					if ($order.aa != this_address)
+						bounce('wrong aa in order');
+
+					if ($order.expiry_ts AND $order.expiry_ts <= timestamp)
+						bounce("order expired");
+
+					$id = sha256($order.address || $order.sell_asset || $order.buy_asset || $order.sell_amount || $order.price || ($order.nonce otherwise '') || trigger.data.order.last_ball_unit);
+
+					if (var['executed_' || $id])
+						bounce('order already executed');
+					
+					$signer = trigger.data.order.authors[0].address;
+					if ($signer != $order.address AND !var['grant_' || $order.address || '_to_' || $signer])
+						bounce("order signer was not authorized to sign");
+					if (!is_valid_signed_package(trigger.data.order, $signer))
+						bounce('bad signature of order');
+				}`,
+				messages: [{
+					app: 'state',
+					state: `{
+						var['cancelled_' || $id] = 1;
+						response['message'] = 'cancelled order ' || $id;
+						response['id'] = $id;
+						response['event'] = 'cancel';
+
+						$cancel_fee = 1000;
+						$key = 'balance_' || $order.address || '_base';
+						var[$key] += trigger.output[[asset=base]] - $cancel_fee;
+						if (var[$key] < 0) // received funds can be less than bounce fees if received from an AA
+							bounce("balance would drop below 0");
+					}`
+				}]
+			},
+			{ // revoke authorization from a specific address to sign orders for me
+				if: "{ trigger.data.revoke AND trigger.data.address AND trigger.output[[asset=base]] >= 10000 }",
+				init: `{
+					if (!is_valid_address(trigger.data.address))
+						bounce("invalid address");
+					if (trigger.data.address == trigger.address)
+						bounce("same address");
+				}`,
+				messages: [{
+					app: 'state',
+					state: `{
+						var['grant_' || trigger.address || '_to_' || trigger.data.address] = false;
+						response['message'] = 'revoked authorization from ' || trigger.data.address || ' to sign orders for you';
+						response['address'] = trigger.data.address;
+						response['event'] = 'revocation';
+					}`
+				}]
+			},
+			{ // silently accept coins and optionally grant authorization to a specific address to sign orders for me
+				if: "{ (!trigger.data OR trigger.data.to OR trigger.data.grant AND trigger.data.address) AND trigger.output[[asset=base]] >= 10000 }",
+				init: `{
+					if (trigger.data.grant){
+						if (!is_valid_address(trigger.data.address))
+							bounce("invalid address");
+						if (trigger.data.address == trigger.address)
+							bounce("same address");
+						if (trigger.data.to)
+							bounce("grant and to at the same time");
+					}
+				}`,
+				messages: [{
+					app: 'state',
+					state: `{
+						if (trigger.data.grant){
+							var['grant_' || trigger.address || '_to_' || trigger.data.address] = 1;
+							$response_grant = 'authorized ' || trigger.data.address || ' to sign orders for you, also ';
+							response['authorized_address'] = trigger.data.address;
+							response['event'] = 'grant';
+						}
+						$asset = trigger.output[[asset!=base]].asset;
+						if ($asset == 'ambiguous')
+							bounce('ambiguous asset');
+						if (trigger.data.to){
+							if (!is_valid_address(trigger.data.to))
+								bounce("invalid deposit address: " || trigger.data.to);
+							$address = trigger.data.to;
+						}
+						else
+							$address = trigger.address;
+						$base_key = 'balance_'||$address||'_'||'base';
+						var[$base_key] = var[$base_key] + trigger.output[[asset=base]];
+						$response_base = trigger.output[[asset=base]] || ' bytes';
+						response[$address || '_base'] = trigger.output[[asset=base]];
+						if ($asset != 'none'){
+							$asset_key = 'balance_'||$address||'_'||$asset;
+							var[$asset_key] = var[$asset_key] + trigger.output[[asset=$asset]];
+							$response_asset = ' and ' || trigger.output[[asset=$asset]] || ' of ' || $asset;
+							response[$address || '_' || $asset] = trigger.output[[asset=$asset]];
+						}
+						response['message'] = ($response_grant otherwise '') || 'accepted coins: ' || $response_base || ($response_asset otherwise '');
+						response[trigger.data.grant ? 'secondary_event' : 'event'] = 'deposit';
+					}`
+				}]
+			},
+		]
+	}
+}
