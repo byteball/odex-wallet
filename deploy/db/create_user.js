@@ -9,7 +9,7 @@ let client, db
 const create = async () => {
 	try {
 		client = await MongoClient.connect(conf.mongoUrl, { useNewUrlParser: true });
-		db = client.db('odex')
+		db = client.db(conf.mongoDbName)
 		db.addUser(
 			{
 				username: user,

@@ -4,7 +4,7 @@ const conf = require('ocore/conf.js')
 (async () => {
 	client = await MongoClient.connect(conf.mongoUrl, { useNewUrlParser: true });
 
-	const db = client.db('odex')
+	const db = client.db(conf.mongoDbName)
 	const response = await db.createCollection('trades', {
 		validator:  {
 			$jsonSchema: 'object',
