@@ -16,7 +16,7 @@ let assocAddressByOrderHash = {};
 
 
 function sendGreeting(from_address) {
-	device.sendMessageToDevice(from_address, 'text', 'To log in to the DEX, please let me know your address (click ... and "Insert my address")');
+	device.sendMessageToDevice(from_address, 'text', 'To log in to the DEX, please let me know your address (click ... and "Insert my address")\n\nPlease use a single-address wallet.');
 }
 
 function onPaired(from_address, pairing_secret) {

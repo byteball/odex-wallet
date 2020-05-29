@@ -15,17 +15,17 @@ const seed = async () => {
 		db = client.db(conf.mongoDbName)
 
 		//console.log(client)
-		if (baseTokens.length === 0)
+		if (baseTokens[networkID].length === 0)
 			return;
 
-		documents = baseTokens.map((symbol) => ({
+		documents = baseTokens[networkID].map((symbol) => ({
 			symbol: symbol,
 			asset: assets[symbol],
-			decimals: decimals[symbol],
+			decimals: decimals[networkID][symbol],
 			active: true,
 			quote: false,
 			listed: true,
-			rank: tokenRanks[symbol] ? tokenRanks[symbol] : 0,
+			rank: tokenRanks[networkID][symbol] || 0,
 			createdAt: Date(),
 			updatedAt: Date()
 		}))

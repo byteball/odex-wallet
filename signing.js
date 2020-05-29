@@ -1,4 +1,5 @@
 const headlessWallet = require('headless-obyte');
+const constants = require('ocore/constants.js');
 const db = require('ocore/db.js');
 const signed_message = require('ocore/signed_message.js');
 const operator = require('./operator.js');
@@ -18,6 +19,8 @@ function validateSignedMessage(objSignedMessage, handleResult) {
 	catch(e){
 		return handleResult("broken signed message");
 	}
+	if (objSignedMessage.version !== constants.version)
+		return handleResult("wrong version of signed message");
 	signed_message.validateSignedMessage(db, objSignedMessage, address, handleResult);
 }
 

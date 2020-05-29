@@ -24,8 +24,9 @@ const getMongoURI = (user, password, environment) => {
 
 
 const getPairRank = (baseTokenSymbol, quoteTokenSymbol) => {
-	let baseTokenRank = tokenRanks[baseTokenSymbol] ? tokenRanks[baseTokenSymbol] : 0
-	let quoteTokenRank = tokenRanks[quoteTokenSymbol] ? tokenRanks[quoteTokenSymbol] : 0
+	const networkID = getNetworkID()
+	let baseTokenRank = tokenRanks[networkID][baseTokenSymbol] ? tokenRanks[networkID][baseTokenSymbol] : 0
+	let quoteTokenRank = tokenRanks[networkID][quoteTokenSymbol] ? tokenRanks[networkID][quoteTokenSymbol] : 0
 
 	return baseTokenRank + quoteTokenRank
 }
