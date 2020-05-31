@@ -10,7 +10,7 @@ let client, db, response
 const drop = async () => {
 	try {
 		client = await MongoClient.connect(conf.mongoUrl, { useNewUrlParser: true });
-		db = client.db('odex')
+		db = client.db(conf.mongoDbName)
 		response = await db.dropCollection(collection)
 		console.log(response)
 	} catch(e) {

@@ -39,6 +39,15 @@ exports.matcher_fee = 0.001;
 exports.affiliate_fee = 0.001;
 exports.aa_address = 'FVRZTCFXIDQ3EYRGQSLE5AMWUQF4PRYJ';
 exports.token_registry_aa_address = 'O6H6ZIFI57X3PLTYHOCVYPP5A553CYFQ';
+exports.short_lived_token_registry_aa_address = 'XVIFA4GZO7IHAUBFU47GSWMBZYOY56ZD';
+
+exports.allowed_namers = process.env.testnet ? [
+	{
+		base_aa: "UPGVQBNM6YOZS5OG7QFB2O2P4UF3LQNR",
+		oracle: "4EHFJW5EY74DG6PGSXX5CHF5F2FFIJX4"
+	}
+] : [];
+
 
 exports.rpcPort = process.env.testnet ? 16333 : 6333;
 exports.mongoUrl = 'mongodb://localhost:27017';

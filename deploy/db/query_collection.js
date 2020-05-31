@@ -11,7 +11,7 @@ let client, db
 const query = async () => {
 	try {
 		client = await MongoClient.connect(conf.mongoUrl, { useNewUrlParser: true });
-		db = client.db('odex')
+		db = client.db(conf.mongoDbName)
 
 		const response = await db.collection(collection).find().toArray()
 		console.log(response)
