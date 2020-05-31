@@ -133,12 +133,38 @@ function resetAssetInfos() {
 	assocDecimalsByAsset = {};
 }
 
+
+async function getSymbolByShortLivedAsset(asset, cb){
+	if (!cb)
+		return new Promise(resolve => getSymbolByShortLivedAsset(asset, resolve));
+	for (var i = 0; i < conf.allowed_namers.length; i++) {
+		let var_prefix = "a2s_" + asset + "|" + conf.allowed_namers[i].base_aa + "|" + conf.allowed_namers[i].oracle;
+		let symbol = await readAAStateVar(conf.short_lived_token_registry_aa_address, var_prefix);
+		if (symbol)
+			return cb(symbol)
+	}
+	return cb();
+}
+
+async function getShortLivedAssetBySymbol(symbol, cb){
+	if (!cb)
+		return new Promise(resolve => getShortLivedAssetBySymbol(symbol, resolve));
+	for (var i = 0; i <  conf.allowed_namers.length; i++) {
+		let var_prefix = "s2a_" + symbol + "|" + conf.allowed_namers[i].base_aa + "|" + conf.allowed_namers[i].oracle;
+		let asset = await readAAStateVar(conf.short_lived_token_registry_aa_address, var_prefix);
+		if (asset)
+			return cb(asset)
+	}
+	return cb();
+}
+
+
 async function getSymbolByAsset(asset) {
 	if (asset === null || asset === 'base')
 		return 'GBYTE';
 	if (assocSymbolByAsset[asset])
 		return assocSymbolByAsset[asset];
-	let symbol = await readAAStateVar(conf.token_registry_aa_address, 'a2s_' + asset);
+	let symbol = await getSymbolByShortLivedAsset(asset) || await readAAStateVar(conf.token_registry_aa_address, 'a2s_' + asset);
 	console.error('----- getSymbolByAsset', asset, symbol);
 	if (!symbol)
 		symbol = asset.replace(/[\/+=]/, '').substr(0, 6);
@@ -151,7 +177,7 @@ async function getAssetBySymbol(symbol) {
 		return 'base';
 	if (assocAssetBySymbol[symbol])
 		return assocAssetBySymbol[symbol];
-	let asset = await readAAStateVar(conf.token_registry_aa_address, 's2a_' + symbol);
+	let asset = await getShortLivedAssetBySymbol(symbol) || await readAAStateVar(conf.token_registry_aa_address, 's2a_' + symbol);
 	console.error('----- getSymbolByAsset', symbol, asset);
 	if (asset)
 		assocAssetBySymbol[symbol] = asset;
@@ -168,13 +194,22 @@ async function getDecimalsByAsset(asset) {
 	return decimals;
 }
 
-async function getDecimalsByAssetFromTokenRegistry(asset) {
+async function getDecimalsByAssetFromTokenRegistry(asset, cb) {
+	if (!cb)
+		return new Promise(resolve => getDecimalsByAssetFromTokenRegistry(asset, resolve));
+	for (var i = 0; i < conf.allowed_namers.length; i++) {
+		let var_prefix = "decimals_" + asset + "|" + conf.allowed_namers[i].base_aa + "|" + conf.allowed_namers[i].oracle;
+		let decimals = await readAAStateVar(conf.short_lived_token_registry_aa_address, var_prefix);
+		if (decimals)
+			return cb(parseInt(decimals))
+	}
+
 	let desc_hash = await readAAStateVar(conf.token_registry_aa_address, 'current_desc_' + asset);
 	if (!desc_hash)
-		return 0;
+		return cb(0);
 	let decimals = await readAAStateVar(conf.token_registry_aa_address, 'decimals_' + desc_hash);
 	console.error('------ getDecimalsByAssetFromTokenRegistry', asset, decimals);
-	return decimals ? parseInt(decimals) : 0;
+	return cb(decimals ? parseInt(decimals) : 0);
 }
 
 function checkAssetExists(asset, cb, bRetrying) {
