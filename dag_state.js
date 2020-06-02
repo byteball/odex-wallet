@@ -264,7 +264,7 @@ async function onAAResponse(objAAResponse) {
 		eventBus.emit('cancel_order', { orderHash: hash, userAddress: objAAResponse.trigger_address });
 		return;
 	}
-	if (event === 'revoke') { // revoke authorization
+	if (event === 'revocation') { // revoke authorization
 		let signerAddress = objAAResponse.response.responseVars.address;
 		eventBus.emit('revoke', { signerAddress, userAddress: objAAResponse.trigger_address });
 		return;
