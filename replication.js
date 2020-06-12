@@ -159,7 +159,7 @@ async function requestUnresolvedEvents(ws) {
 async function requestEvent(ws, event_hash) {
 	const response = await sendCustomRequest(ws, { command: 'get_event', params: { event_hash } });
 	if (response.error) // it'll be referenced again and requested again
-		return console.log("error from " + peer + ": " + response.error);
+		return console.log("error from " + ws.peer + ": " + response.error);
 	await handleEventUnderLock(ws, response.signed_event);
 }
 
