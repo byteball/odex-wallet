@@ -70,7 +70,7 @@ function onPaired(from_address, pairing_secret) {
 	if (order_request.nonce)
 		objOrderMessage.nonce = order_request.nonce;
 	if (order_request.expiry_ts)
-		objOrderMessage.nonce = order_request.expiry_ts;
+		objOrderMessage.expiry_ts = order_request.expiry_ts;
 	let b64OrderMessage = Buffer.from(JSON.stringify(objOrderMessage), 'utf8').toString('base64');
 	sendResponse(`Please sign the order: [message](sign-message-request-network-aware:${b64OrderMessage}).`);
 }
