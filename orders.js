@@ -28,7 +28,7 @@ function getOrderError(order_data, origin_address) {
 	
 	if (order_data.aa !== conf.aa_address)
 		return "wrong AA";
-	if (ValidationUtils.hasFieldsExcept(order_data, ['aa', 'matcher', 'matcher_fee', 'affiliate', 'affiliate_fee', 'matcher_fee_asset', 'affiliate_fee_asset', 'sell_asset', 'buy_asset', 'sell_amount', 'address', 'price', 'nonce']))
+	if (ValidationUtils.hasFieldsExcept(order_data, ['aa', 'matcher', 'matcher_fee', 'affiliate', 'affiliate_fee', 'matcher_fee_asset', 'affiliate_fee_asset', 'sell_asset', 'buy_asset', 'sell_amount', 'address', 'price', 'nonce', 'expiry_ts']))
 		return "foreign fields in order";
 	
 	if (!utils.isValidAsset(order_data.sell_asset))
