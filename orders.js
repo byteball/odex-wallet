@@ -59,7 +59,7 @@ function getOrderError(order_data, origin_address) {
 		return 'invalid price';
 	if (getPriceInAllowedPrecision(order_data) !== order_data.price)
 		return 'excessive precision';
-	if ('expiry_ts' in order_data && (!ValidationUtils.isPositiveInteger(order_data.expiry_ts || order_data.expiry_ts < Date.now()/1000)))
+	if ('expiry_ts' in order_data && (!ValidationUtils.isPositiveInteger(order_data.expiry_ts) || order_data.expiry_ts < Date.now()/1000))
 		return 'invalid expiry_ts';
 	if ('nonce' in order_data) {
 		if (!['string', 'number'].includes(typeof order_data.nonce))
