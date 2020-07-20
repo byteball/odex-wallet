@@ -43,10 +43,15 @@ exports.short_lived_token_registry_aa_address = 'XVIFA4GZO7IHAUBFU47GSWMBZYOY56Z
 
 exports.allowed_namers = process.env.testnet ? [
 	{
-		base_aa: "UPGVQBNM6YOZS5OG7QFB2O2P4UF3LQNR",
+		base_aa: "DYCDBVYRODPCPEH4XMWE33HYAX7WOZ3W",
 		oracle: "4EHFJW5EY74DG6PGSXX5CHF5F2FFIJX4"
 	}
-] : [];
+] : [
+	{
+		base_aa: "DYCDBVYRODPCPEH4XMWE33HYAX7WOZ3W",
+		oracle: "TKT4UESIKTTRALRRLWS4SENSTJX6ODCW"
+	}
+];
 
 
 exports.rpcPort = process.env.testnet ? 16333 : 6333;
