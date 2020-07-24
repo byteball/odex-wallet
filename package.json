@@ -14,7 +14,7 @@
 	],
 	"dependencies": {
 		"headless-obyte": "git+https://github.com/byteball/headless-obyte.git",
-		"mongodb": "^3.5.2",
+		"mongodb": "^3.5.9",
 		"ocore": "git+https://github.com/byteball/ocore.git",
 		"rpcify": "git+https://github.com/byteball/rpcify.git"
 	},
