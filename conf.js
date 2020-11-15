@@ -43,12 +43,12 @@ exports.short_lived_token_registry_aa_address = 'XVIFA4GZO7IHAUBFU47GSWMBZYOY56Z
 
 exports.allowed_namers = process.env.testnet ? [
 	{
-		base_aa: "DYCDBVYRODPCPEH4XMWE33HYAX7WOZ3W",
+		base_aa: "ZZEVOHYFMAR4GOVTD4ZFZOAAHBJS5ZIY",
 		oracle: "4EHFJW5EY74DG6PGSXX5CHF5F2FFIJX4"
 	}
 ] : [
 	{
-		base_aa: "DYCDBVYRODPCPEH4XMWE33HYAX7WOZ3W",
+		base_aa: "ZZEVOHYFMAR4GOVTD4ZFZOAAHBJS5ZIY",
 		oracle: "TKT4UESIKTTRALRRLWS4SENSTJX6ODCW"
 	}
 ];
