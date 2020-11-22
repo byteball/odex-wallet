@@ -309,6 +309,7 @@ async function checkTrade(objAAResponse) {
 	let assocAmounts = {};
 	let assocExecutedOrders = {};
 	let assocAmountsLeft = {};
+	let bMatcherIsMe = (objAAResponse.trigger_address === operator.getAddress());
 	let responseVars = objAAResponse.response.responseVars;
 	for (let var_name in responseVars) {
 		if (var_name.startsWith('amount_') && !var_name.startsWith('amount_left_')) {
@@ -343,7 +344,7 @@ async function checkTrade(objAAResponse) {
 	// check the trade amount
 	let trade = await mongodb.collection('trades').findOne({ txHash: objAAResponse.trigger_unit });
 	if (!trade) {
-		if (objAAResponse.trigger_address === operator.getAddress())
+		if (bMatcherIsMe)
 			throw Error("own trade not found: " + objAAResponse.trigger_unit);
 		console.log("another matcher's trade " + objAAResponse.trigger_unit + " not found");
 	}
@@ -370,7 +371,7 @@ async function checkTrade(objAAResponse) {
 	for (let hash in assocExecutedOrders) {
 		let order = await mongodb.collection('orders').findOne({ hash });
 		if (!order) {
-			if (objAAResponse.trigger_address === operator.getAddress())
+			if (bMatcherIsMe)
 				throw Error("own order not found by hash " + hash);
 			console.log("another matcher's order " + hash + " not found");
 			continue;
@@ -379,8 +380,8 @@ async function checkTrade(objAAResponse) {
 			if (['CANCELLED', 'AUTO_CANCELLED'].includes(order.status) && order.remainingSellAmount === 0)
 				console.log("executed order " + hash + " appears to be filled but has status " + order.status);
 			else {
-				if (objAAResponse.trigger_address !== operator.getAddress())
-					return console.log("another matcher's executed order " + hash + " is " + order.status + " in the db, filled " + order.filledAmount + " of " + order.amount+", probably not synced yet, will abort other checks");
+				if (!bMatcherIsMe)
+					return console.log("another matcher's executed order " + hash + " is " + order.status + " in the db, filled " + order.filledAmount + " of " + order.amount + ", probably not synced yet, will abort other checks");
 				throw Error("executed order " + hash + " is " + order.status + " in the db, filled " + order.filledAmount + " of " + order.amount);
 			}
 		}
@@ -390,13 +391,16 @@ async function checkTrade(objAAResponse) {
 	for (let hash in assocAmountsLeft) {
 		let order = await mongodb.collection('orders').findOne({ hash });
 		if (!order) {
-			if (objAAResponse.trigger_address === operator.getAddress())
+			if (bMatcherIsMe)
 				throw Error("own order not found by hash " + hash);
 			console.log("another matcher's order " + hash + " not found");
 			continue;
 		}
-		if (order.remainingSellAmount > assocAmountsLeft[hash])
+		if (order.remainingSellAmount > assocAmountsLeft[hash]) {
+			if (!bMatcherIsMe)
+				return console.log("amount left on another matcher's order " + hash + " is too large in db after trade " + objAAResponse.trigger_unit + ": AA says " + assocAmountsLeft[hash] + ", db says " + order.remainingSellAmount + ", probably not synced yet, will abort other checks");
 			throw Error("amount left on order " + hash + " is too large in db after trade " + objAAResponse.trigger_unit + ": AA says " + assocAmountsLeft[hash] + ", db says " + order.remainingSellAmount);
+		}
 		if (trade) {
 			let role;
 			if (trade.takerOrderHash === hash)
