@@ -378,8 +378,11 @@ async function checkTrade(objAAResponse) {
 		if (order.status !== 'FILLED') {
 			if (['CANCELLED', 'AUTO_CANCELLED'].includes(order.status) && order.remainingSellAmount === 0)
 				console.log("executed order " + hash + " appears to be filled but has status " + order.status);
-			else
+			else {
+				if (objAAResponse.trigger_address !== operator.getAddress())
+					return console.log("another matcher's executed order " + hash + " is " + order.status + " in the db, filled " + order.filledAmount + " of " + order.amount+", probably not synced yet, will abort other checks");
 				throw Error("executed order " + hash + " is " + order.status + " in the db, filled " + order.filledAmount + " of " + order.amount);
+			}
 		}
 	}
 
