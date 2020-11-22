@@ -507,6 +507,7 @@ async function start() {
 	mongodb = await mongo.getMongo();
 	await mongodb.collection('unhandled_events').createIndex({ 'signed_message.event_hash': 1 }, { unique: true });
 	await mongodb.collection('unhandled_events').createIndex({ 'signed_message.prev_event_hash': 1 });
+	await mongodb.collection('unhandled_events').createIndex({ 'signed_message.ts': 1 });
 	await mongodb.collection('events').createIndex({ 'signed_message.event_hash': 1 }, { unique: true });
 	await mongodb.collection('events').createIndex({ 'signed_message.origin': 1 });
 //	await mongodb.collection('events').createIndex({ 'signed_message.payload.takerOrder.hash': 1 });
