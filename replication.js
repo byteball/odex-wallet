@@ -236,7 +236,7 @@ async function handleEvent(ws, objSignedEvent) {
 		case 'order':
 			err = await orders.handleSignedOrder(objSignedMessage, origin_address);
 			if (err)
-				return 'bad user order: ' + err;
+				console.log('bad user order: ' + err); // order may be invalid because expired
 			break;
 		case 'cancel':
 			err = await cancels.handleSignedCancel(objSignedMessage, null);
