@@ -72,6 +72,7 @@ function start() {
 //	rpcify.exposeEvent(eventBus, "exchange_error");
 	rpcify.exposeEvent(eventBus, "new_order");
 	rpcify.exposeEvent(eventBus, "cancel_order");
+	rpcify.exposeEvent(eventBus, "revoke");
 	rpcify.exposeEvent(eventBus, "balances_update");
 	rpcify.exposeEvent(eventBus, "loggedin");
 

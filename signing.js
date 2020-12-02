@@ -19,7 +19,7 @@ function validateSignedMessage(objSignedMessage, handleResult) {
 	catch(e){
 		return handleResult("broken signed message");
 	}
-	if (objSignedMessage.version !== constants.version)
+	if (objSignedMessage.version === constants.versionWithoutTimestamp)
 		return handleResult("wrong version of signed message");
 	signed_message.validateSignedMessage(db, objSignedMessage, address, handleResult);
 }
