@@ -67,19 +67,21 @@ function getOrderError(order_data, origin_address) {
 		if (order_data.nonce.length > 16)
 			return 'nonce is too long';
 	}
-	if (order_data.matcher === operator.getAddress()) { // check the matcher fees
-		let expected_fee;
-		if (order_data.sell_asset === order_data.matcher_fee_asset)
-			expected_fee = Math.ceil(order_data.sell_amount * conf.matcher_fee);
-		else if (order_data.buy_asset === order_data.matcher_fee_asset)
-			expected_fee = Math.ceil(order_data.sell_amount * order_data.price * conf.matcher_fee);
-		else
-			return "matcher fee paid in a 3rd asset: " + order_data.matcher_fee_asset;
-		if (order_data.matcher_fee < expected_fee)
-			return "matcher fee " + order_data.matcher_fee + " is less than expected " + expected_fee;
-	}
+	let expected_fee;
+	const bMatcherIsMe = order_data.matcher === operator.getAddress();
+	let matcher_fee =  bMatcherIsMe ? conf.matcher_fee : conf.matcher_fee_max;
+	if (order_data.sell_asset === order_data.matcher_fee_asset)
+		expected_fee = Math.ceil(order_data.sell_amount * matcher_fee);
+	else if (order_data.buy_asset === order_data.matcher_fee_asset)
+		expected_fee = Math.ceil(order_data.sell_amount * order_data.price * matcher_fee);
+	else
+		return "matcher fee paid in a 3rd asset: " + order_data.matcher_fee_asset;
+	if (bMatcherIsMe && order_data.matcher_fee < expected_fee)
+		return "matcher fee " + order_data.matcher_fee + " is less than expected " + expected_fee;
+	if (!bMatcherIsMe && order_data.matcher_fee > expected_fee)
+		return "matcher fee is higher than max limit";
+
 	if (order_data.affiliate === operator.getAddress()) { // check the affiliate fees
-		let expected_fee;
 		if (order_data.sell_asset === order_data.affiliate_fee_asset)
 			expected_fee = Math.ceil(order_data.sell_amount * conf.affiliate_fee);
 		else if (order_data.buy_asset === order_data.affiliate_fee_asset)

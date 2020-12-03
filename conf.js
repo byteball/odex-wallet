@@ -36,6 +36,8 @@ exports.explicitStart = true;
 
 exports.MAX_PRICE_PRECISION = 8; // number of significant digits
 exports.matcher_fee = 0.001;
+exports.matcher_fee_max = 0.005; // max fee for a replicated order to be accepted
+
 exports.affiliate_fee = 0.001;
 exports.aa_address = 'FVRZTCFXIDQ3EYRGQSLE5AMWUQF4PRYJ';
 exports.token_registry_aa_address = 'O6H6ZIFI57X3PLTYHOCVYPP5A553CYFQ';
