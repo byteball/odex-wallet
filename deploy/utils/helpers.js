@@ -1,4 +1,3 @@
-const { tokenRanks } = require('../config')
 
 
 const getNetworkID = () => {
@@ -23,12 +22,8 @@ const getMongoURI = (user, password, environment) => {
 
 
 
-const getPairRank = (baseTokenSymbol, quoteTokenSymbol) => {
-	const networkID = getNetworkID()
-	let baseTokenRank = tokenRanks[networkID][baseTokenSymbol] ? tokenRanks[networkID][baseTokenSymbol] : 0
-	let quoteTokenRank = tokenRanks[networkID][quoteTokenSymbol] ? tokenRanks[networkID][quoteTokenSymbol] : 0
-
-	return baseTokenRank + quoteTokenRank
+const getPairRank = (baseTokenRank, quoteTokenRank) => {
+	return (baseTokenRank||0) + (quoteTokenRank||0)
 }
 
 module.exports = {

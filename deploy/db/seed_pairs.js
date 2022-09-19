@@ -40,7 +40,7 @@ const seed = async () => {
 					quoteTokenDecimals: quote.decimals,
 					active: true,
 					listed: true,
-					rank: getPairRank(nextQuote.symbol, quote.symbol),
+					rank: getPairRank(nextQuote.rank, quote.rank),
 					createdAt: Date(),
 					updatedAt: Date()
 				})
@@ -57,7 +57,7 @@ const seed = async () => {
 					quoteTokenDecimals: quote.decimals,
 					active: true,
 					listed: true,
-					rank: getPairRank(token.symbol, quote.symbol),
+					rank: getPairRank(token.rank, quote.rank),
 					createdAt: Date(),
 					updatedAt: Date()
 				})
