@@ -49,7 +49,7 @@ const conf = require('ocore/conf.js')
 					bsonType: "string"
 				},
 				baseToken: {
-					bsontype: "string"
+					bsonType: "string"
 				},
 				quoteToken: {
 					bsonType: "string"

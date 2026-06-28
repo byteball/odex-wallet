@@ -92,6 +92,8 @@ async function handleInitialOrders(arrOrders) {
 	try {
 		for (var i = 0; i < arrOrders.length; i++) {
 			let order = arrOrders[i];
+			if (typeof order.hash !== 'string')
+				return console.log("bad order hash type");
 			let existing_order = await mongodb.collection('orders').findOne({ hash: order.hash });
 			if (existing_order)
 				continue;
@@ -101,10 +103,26 @@ async function handleInitialOrders(arrOrders) {
 			let be_order = await orders.getBackendOrder(order.originalOrder);
 			if (!orders.ordersAreEqual(be_order, order))
 				return console.log("received and derived order are not the same:\nreceived " + JSON.stringify(order, null, '\t') + "\nderived\n" + JSON.stringify(be_order, null, '\t'));
-			order.createdAt = new Date(order.createdAt);
-			order.updatedAt = new Date(order.updatedAt);
+			const safeOrder = {
+				hash: be_order.hash,
+				amount: be_order.amount,
+				userAddress: be_order.userAddress,
+				matcherAddress: be_order.matcherAddress,
+				affiliateAddress: be_order.originalOrder.signed_message.affiliate || '',
+				price: be_order.price,
+				baseToken: be_order.baseToken,
+				quoteToken: be_order.quoteToken,
+				side: be_order.side,
+				originalOrder: be_order.originalOrder,
+				pairName: typeof order.pairName === 'string' ? order.pairName : undefined,
+				status: typeof order.status === 'string' ? order.status : 'OPEN',
+				filledAmount: typeof order.filledAmount === 'number' ? order.filledAmount : 0,
+				remainingSellAmount: typeof order.remainingSellAmount === 'number' ? order.remainingSellAmount : 0,
+				createdAt: new Date(order.createdAt),
+				updatedAt: new Date(order.updatedAt),
+			};
 				// this will update partially filled orders
-			await mongodb.collection('orders').updateOne({ hash: be_order.hash }, { $set: order }, { upsert: true, checkKeys: false });
+			await mongodb.collection('orders').updateOne({ hash: be_order.hash }, { $set: safeOrder }, { upsert: true });
 		}
 	}
 	catch (e) {
@@ -117,13 +135,33 @@ async function handleInitialTrades(arrTrades) {
 	try {
 		for (var i = 0; i < arrTrades.length; i++) {
 			let trade = arrTrades[i];
+			if (typeof trade.hash !== 'string')
+				return console.log("bad trade hash type");
 			let existing_trade = await mongodb.collection('trades').findOne({ hash: trade.hash });
 			if (existing_trade)
 				continue;
-			trade.createdAt = new Date(trade.createdAt);
-			trade.updatedAt = new Date(trade.updatedAt);
+			const safeTrade = {
+				hash: trade.hash,
+				takerOrderHash: typeof trade.takerOrderHash === 'string' ? trade.takerOrderHash : undefined,
+				makerOrderHash: typeof trade.makerOrderHash === 'string' ? trade.makerOrderHash : undefined,
+				taker: typeof trade.taker === 'string' ? trade.taker : undefined,
+				maker: typeof trade.maker === 'string' ? trade.maker : undefined,
+				price: typeof trade.price === 'number' ? trade.price : undefined,
+				amount: typeof trade.amount === 'number' ? trade.amount : undefined,
+				quoteAmount: typeof trade.quoteAmount === 'number' ? trade.quoteAmount : undefined,
+				remainingTakerSellAmount: typeof trade.remainingTakerSellAmount === 'number' ? trade.remainingTakerSellAmount : undefined,
+				remainingMakerSellAmount: typeof trade.remainingMakerSellAmount === 'number' ? trade.remainingMakerSellAmount : undefined,
+				status: typeof trade.status === 'string' ? trade.status : undefined,
+				txHash: typeof trade.txHash === 'string' ? trade.txHash : undefined,
+				pairName: typeof trade.pairName === 'string' ? trade.pairName : undefined,
+				baseToken: typeof trade.baseToken === 'string' ? trade.baseToken : undefined,
+				quoteToken: typeof trade.quoteToken === 'string' ? trade.quoteToken : undefined,
+				makerSide: typeof trade.makerSide === 'string' ? trade.makerSide : undefined,
+				createdAt: new Date(trade.createdAt),
+				updatedAt: new Date(trade.updatedAt),
+			};
 			try {
-				await mongodb.collection('trades').insertOne(trade);
+				await mongodb.collection('trades').insertOne(safeTrade);
 			}
 			catch (e) {
 				console.log("insert exception: " + e);
@@ -453,7 +491,7 @@ eventBus.on('custom_justsaying', async (ws, body) => {
 			console.log("bad signed event: " + err);
 	}
 	else if (body.last_known_event_hashes) {
-		let arrHashes = Object.values(body.last_known_event_hashes);
+		let arrHashes = Object.values(body.last_known_event_hashes).filter(h => typeof h === 'string');
 		if (arrHashes.length === 0)
 			return;
 		let arrEvents = await mongodb.collection('events').find({ 'signed_message.event_hash': { $in: arrHashes } }).toArray();
@@ -489,7 +527,7 @@ eventBus.on('custom_request', async (ws, params, tag) => {
 			const custom_params = params.params;
 			const event_hash = custom_params.event_hash;
 			console.log('received get_event ' + event_hash);
-			if (!event_hash)
+			if (typeof event_hash !== 'string')
 				return network.sendResponse(ws, tag, { error: "no event_hash" });
 			const objSignedEvent = await mongodb.collection('events').findOne({ 'signed_message.event_hash': event_hash });
 			if (!objSignedEvent)
