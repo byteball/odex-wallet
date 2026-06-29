@@ -525,8 +525,10 @@ eventBus.on('custom_request', async (ws, params, tag) => {
 		
 		case 'get_event':
 			const custom_params = params.params;
+			if (!custom_params)
+				return network.sendResponse(ws, tag, { error: "no params" });
 			const event_hash = custom_params.event_hash;
-			console.log('received get_event ' + event_hash);
+			console.log('received get_event ', event_hash);
 			if (typeof event_hash !== 'string')
 				return network.sendResponse(ws, tag, { error: "no event_hash" });
 			const objSignedEvent = await mongodb.collection('events').findOne({ 'signed_message.event_hash': event_hash });
@@ -537,7 +539,7 @@ eventBus.on('custom_request', async (ws, params, tag) => {
 			break;
 		
 		default:
-			console.log('unknown command from odex peer: ' + params.command);
+			console.log('unknown command from odex peer: ', params.command);
 	}
 });
 
