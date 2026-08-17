@@ -4,7 +4,7 @@
 	"description": "A wallet for DEX",
 	"main": "run.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "mocha --opts test/mocha.opts --require test/bootload.js"
 	},
 	"keywords": [
 		"DEX",
@@ -17,6 +17,24 @@
 		"mongodb": "^3.5.9",
 		"ocore": "git+https://github.com/byteball/ocore.git",
 		"rpcify": "git+https://github.com/byteball/rpcify.git"
+	},
+	"devDependencies": {
+		"aa-testkit": "git+https://github.com/valyakin/aa-testkit.git",
+		"aabot": "git+https://github.com/byteball/aabot.git",
+		"chai": "^4.2.0",
+		"mocha": "^6.2.0",
+		"eslint": "^6.3.0",
+		"eslint-config-standard": "^14.1.0",
+		"eslint-plugin-chai-friendly": "^0.4.1",
+		"eslint-plugin-import": "^2.18.2",
+		"eslint-plugin-mocha": "^6.1.1",
+		"eslint-plugin-node": "^10.0.0",
+		"eslint-plugin-promise": "^4.2.1",
+		"eslint-plugin-standard": "^4.0.1"
+	},
+	"resolutions": {
+		"chalk": "^3.0.0",
+		"cli-width": "^2.2.1"
 	},
 	"author": "obyte",
 	"license": "MIT"
