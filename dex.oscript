@@ -62,6 +62,9 @@
 					$order2 = trigger.data.order2.signed_message;
 					if (!$order1.sell_asset OR !$order2.sell_asset)
 						return false;
+					require($order1.sell_amount > 0 AND $order2.sell_amount > 0, "sell_amount must be positive");
+					require($order1.price > 0 AND $order2.price > 0, "price must be positive");
+					require($order1.matcher_fee >= 0 AND $order2.matcher_fee >= 0, "order matcher_fee must be positive or 0");
 					if ($order1.sell_asset != $order2.buy_asset OR $order1.buy_asset != $order2.sell_asset)
 						bounce('assets do not match');
 					if ($order1.sell_asset == $order1.buy_asset)
@@ -146,6 +149,7 @@
 					$max_matcher_fee2 = round($order2.matcher_fee * $amount_sold2/$order2.sell_amount);
 					$matcher_fee1 = (!exists(trigger.data.matcher_fee1) OR trigger.data.matcher_fee1 == 'default') ? $max_matcher_fee1 : trigger.data.matcher_fee1;
 					$matcher_fee2 = (!exists(trigger.data.matcher_fee2) OR trigger.data.matcher_fee2 == 'default') ? $max_matcher_fee2 : trigger.data.matcher_fee2;
+					require($matcher_fee1 >= 0 AND $matcher_fee2 >= 0, "trade matcher_fee must be positive or 0");
 					// the formula will fail if matcher_fee1/matcher_fee2 is not a number
 					if ($matcher_fee1 > $max_matcher_fee1)
 						bounce('matcher_fee1 is too large');
@@ -190,6 +194,7 @@
 						var[$sell_key2] -= $amount_sold2;
 						var[$buy_key1] += $amount_sold2;
 						var[$buy_key2] += $amount_sold1;
+						require(var[$sell_key1] >= 0 AND var[$sell_key2] >= 0 AND var[$buy_key1] >= 0 AND var[$buy_key2] >= 0, "some balances would drop below 0");
 
 						// matcher fees
 						$matcher_fee_user_key1 = 'balance_' || $order1.address || '_' || $order1.matcher_fee_asset;
