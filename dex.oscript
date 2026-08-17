@@ -279,7 +279,7 @@
 					if ($order.expiry_ts AND $order.expiry_ts <= timestamp)
 						bounce("order expired");
 
-					$id = sha256($order.address || $order.sell_asset || $order.buy_asset || $order.sell_amount || $order.price || ($order.nonce otherwise '') || trigger.data.order.last_ball_unit);
+					$id = sha256($order.address || $order.sell_asset || $order.buy_asset || $order.sell_amount || $order.price || ($order.nonce otherwise '') || (trigger.data.order.last_ball_unit otherwise '-'));
 
 					if (var['executed_' || $id])
 						bounce('order already executed');
