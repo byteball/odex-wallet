@@ -3,6 +3,8 @@
 	getters: `{
 		$get_order_id = ($order) => {
 			$sm = $order.signed_message;
+			require(asset[$sm.sell_asset].exists, "no such sell_asset");
+			require(asset[$sm.buy_asset].exists, "no such buy_asset");
 			sha256($sm.address || $sm.sell_asset || $sm.buy_asset || $sm.sell_amount || $sm.price || ($sm.nonce otherwise '') || ($order.last_ball_unit otherwise '-'))
 		};
 	}`,
