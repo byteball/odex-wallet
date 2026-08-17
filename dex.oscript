@@ -5,7 +5,10 @@
 			$sm = $order.signed_message;
 			require(asset[$sm.sell_asset].exists, "no such sell_asset");
 			require(asset[$sm.buy_asset].exists, "no such buy_asset");
-			sha256($sm.address || $sm.sell_asset || $sm.buy_asset || $sm.sell_amount || $sm.price || ($sm.nonce otherwise '') || ($order.last_ball_unit otherwise '-'))
+			if (typeof($sm.nonce) == 'string' AND contains($sm.nonce, '_'))
+				bounce("invalid nonce: " || $sm.nonce);
+			$fields = [$sm.address, $sm.sell_asset, $sm.buy_asset, $sm.sell_amount, $sm.price, $sm.nonce otherwise '', $order.last_ball_unit otherwise '-'];
+			sha256(join($fields, '_'))
 		};
 	}`,
 	messages: {

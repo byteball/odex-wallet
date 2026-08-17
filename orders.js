@@ -66,6 +66,8 @@ function getOrderError(order_data, origin_address) {
 			return 'invalid nonce';
 		if (order_data.nonce.length > 16)
 			return 'nonce is too long';
+		if (typeof order_data.nonce === 'string' && order_data.nonce.includes('_'))
+			return 'invalid nonce';
 	}
 	let expected_fee;
 	const bMatcherIsMe = order_data.matcher === operator.getAddress();
@@ -157,8 +159,8 @@ async function getPair(asset1, asset2) {
 
 function getOrderHash(order) {
 	const order_data = order.signed_message;
-	let str = order_data.address + order_data.sell_asset + order_data.buy_asset + order_data.sell_amount + formulaCommon.toOscriptPrecision(order_data.price) + (order_data.nonce || '') + (order.last_ball_unit || '-');
-	return crypto.createHash("sha256").update(str, "utf8").digest("base64");
+	const fields = [order_data.address, order_data.sell_asset, order_data.buy_asset, order_data.sell_amount, formulaCommon.toOscriptPrecision(order_data.price), order_data.nonce || '', order.last_ball_unit || '-'];
+	return crypto.createHash("sha256").update(fields.join('_'), "utf8").digest("base64");
 }
 
 
