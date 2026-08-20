@@ -12,7 +12,7 @@ const cancel = async () => {
 		client = await MongoClient.connect(conf.mongoUrl, { useNewUrlParser: true });
 		db = client.db(conf.mongoDbName)
 
-		const query = { status: { $in: ['OPEN', 'PARTIALLY_FILLED'] } }
+		const query = { status: { $in: ['OPEN', 'PARTIAL_FILLED'] } }
 		if (pairName)
 			query.pairName = pairName
 
