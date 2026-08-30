@@ -39,7 +39,7 @@ exports.matcher_fee = 0.001;
 exports.matcher_fee_max = 0.005; // max fee for a replicated order to be accepted
 
 exports.affiliate_fee = 0.001;
-exports.aa_address = 'ODEX5NGJKLKAWJYJ7JILB6AQQKOCJ34W';
+exports.aa_address = process.env.testnet ? 'FVRZTCFXIDQ3EYRGQSLE5AMWUQF4PRYJ' : 'ODEX5NGJKLKAWJYJ7JILB6AQQKOCJ34W';
 exports.token_registry_aa_address = 'O6H6ZIFI57X3PLTYHOCVYPP5A553CYFQ';
 exports.short_lived_token_registry_aa_address = 'XVIFA4GZO7IHAUBFU47GSWMBZYOY56ZD';
 
