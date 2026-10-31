@@ -12,7 +12,7 @@ async function start() {
 			resolve();
 		}
 
-		const go = spawn('go run main.go', {
+		const go = spawn('go run --race main.go', {
 			cwd: process.env.HOME + "/go/src/github.com/byteball/odex-backend",
 			env: {
 				...process.env,
