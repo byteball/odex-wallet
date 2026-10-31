@@ -17,6 +17,7 @@ async function start() {
 			env: {
 				...process.env,
 				GO_ENV: conf.backendEnvironment,
+				GO111MODULE: 'auto',
 			},
 			shell: true,
 		});
