@@ -18,6 +18,7 @@ async function start() {
 				...process.env,
 				GO_ENV: conf.backendEnvironment,
 				GO111MODULE: 'auto',
+				GODEBUG: 'multipathtcp=0',
 			},
 			shell: true,
 		});
